@@ -9,6 +9,8 @@ import configparser
 config = configparser.ConfigParser()
 config.read('hardware_config.ini')
 min_flow_rate = config.getint('PUMP', 'MIN_FLOW_RATE', fallback=40)
+FORWARD_PIN = config.getint('PUMP', 'FORWARD_PIN', fallback=13)
+REVERSE_PIN = config.getint('PUMP', 'REVERSE_PIN', fallback=19)
 
 class PumpDirection(str, Enum):
   forward = "forward"
@@ -25,9 +27,6 @@ class PumpSpeedControl(BaseModel):
 router = APIRouter()
 pi = pigpio.pi()
 
-# Define the pin numbers for forward and reverse
-FORWARD_PIN = 13
-REVERSE_PIN = 19
 
 @router.post("/")
 async def control_pump(pump: PumpControl):
@@ -40,8 +39,8 @@ async def control_pump(pump: PumpControl):
   pi.write(REVERSE_PIN, 0)
 
   if pump.direction == PumpDirection.forward:
-    pi.write(FORWARD_PIN, 1)  # Activate forward
     pi.write(REVERSE_PIN, 0)  # Ensure reverse is deactivated
+    pi.write(FORWARD_PIN, 1)  # Activate forward
   elif pump.direction == PumpDirection.reverse:
     pi.write(FORWARD_PIN, 0)  # Ensure forward is deactivated
     pi.write(REVERSE_PIN, 1)  # Activate reverse
@@ -65,11 +64,11 @@ async def control_pump_speed(pump: PumpSpeedControl):
   pi.write(REVERSE_PIN, 0)
 
   if pump.direction == PumpDirection.forward:
-    pi.set_PWM_dutycycle(FORWARD_PIN, duty_cycle)  # Set PWM duty cycle for speed
     pi.write(REVERSE_PIN, 0)  # Ensure reverse is deactivated
+    pi.set_PWM_dutycycle(FORWARD_PIN, duty_cycle)  # Set PWM duty cycle for speed
   elif pump.direction == PumpDirection.reverse:
-    pi.set_PWM_dutycycle(REVERSE_PIN, duty_cycle)  # Set PWM duty cycle for speed
     pi.write(FORWARD_PIN, 0)  # Ensure forward is deactivated
+    pi.set_PWM_dutycycle(REVERSE_PIN, duty_cycle)  # Set PWM duty cycle for speed
   elif pump.direction == PumpDirection.stop:
     pi.set_PWM_dutycycle(FORWARD_PIN, 0)
     pi.set_PWM_dutycycle(REVERSE_PIN, 0)  # Stop the pump by setting duty cycle to 0
