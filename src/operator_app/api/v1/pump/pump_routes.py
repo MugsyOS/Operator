@@ -9,6 +9,8 @@ import configparser
 config = configparser.ConfigParser()
 config.read('hardware_config.ini')
 min_flow_rate = config.getint('PUMP', 'MIN_FLOW_RATE', fallback=40)
+FORWARD_PIN = config.getint('PUMP', 'FORWARD_PIN', fallback=13)
+REVERSE_PIN = config.getint('PUMP', 'REVERSE_PIN', fallback=19)
 
 class PumpDirection(str, Enum):
   forward = "forward"
@@ -25,9 +27,6 @@ class PumpSpeedControl(BaseModel):
 router = APIRouter()
 pi = pigpio.pi()
 
-# Define the pin numbers for forward and reverse
-FORWARD_PIN = 13
-REVERSE_PIN = 19
 
 @router.post("/")
 async def control_pump(pump: PumpControl):
