@@ -39,6 +39,7 @@ To set up the project environment:
      venv\Scripts\activate
      ```
 
+
 ### Installing the Application
 
 #### Development Mode
@@ -62,6 +63,20 @@ To start the FastAPI application, run:
 uvicorn operator_app.app:app --reload --host 0.0.0.0 --port 8000
 ```
 This command will start the FastAPI server with live reloading enabled.
+
+## Tests
+
+To run tests, run:
+```bash
+pytest
+```
+
+## Troubleshooting
+
+If you are getting import errors, you may need to add your app source to the ENV, run:
+```bash
+export PYTHONPATH=$PYTHONPATH:/path/to/Operator/src
+```
 
 ## Contributing
 Contributions to this project are welcome. Please ensure that all pull requests are well-documented and include tests where applicable.
