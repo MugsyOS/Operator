@@ -24,9 +24,10 @@ def test_set_relay_returns_400_for_invalid_channel():
     response = client.post("/", json={"relay_channel": 5, "state": "on"})
     assert response.status_code == 400
 
-@patch('operator_app.api.v1.relay.relay_routes.time.sleep', MagicMock())
-def test_set_relay_off_after_timer():
+@pytest.mark.asyncio
+@patch('operator_app.api.v1.relay.relay_routes.asyncio.sleep', new_callable=MagicMock)
+async def test_set_relay_off_after_timer(mock_sleep):
     with patch('operator_app.api.v1.relay.relay_routes.pi.write') as mock_write:
-        set_relay_off_after_timer(22, 5)
-        time.sleep.assert_called_with(5)
+        await set_relay_off_after_timer(22, 5)
+        mock_sleep.assert_called_with(5)
         mock_write.assert_called_with(22, 1)
