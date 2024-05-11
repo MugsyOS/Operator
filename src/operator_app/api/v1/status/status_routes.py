@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .status_services import turn_on, turn_off, read_state
+from .status_services import read_state
 
 router = APIRouter()
 
