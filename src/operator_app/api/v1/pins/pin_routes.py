@@ -13,6 +13,6 @@ class PinData(BaseModel):
 def turn_on_route(pin_data: PinData, background_tasks: BackgroundTasks):
     return turn_on(pin_data.gpio_pin, pin_data.time, background_tasks)
 
-@router.get("/off/{gpio_pin}")
-def turn_off_route(gpio_pin: int):
-    return turn_off(gpio_pin)
+@router.post("/off")
+def turn_off_route(pin_data: PinData):
+    return turn_off(pin_data.gpio_pin)
