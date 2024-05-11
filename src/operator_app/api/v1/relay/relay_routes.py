@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from enum import Enum
 import pigpio
-import time
+import asyncio
 from typing import Optional, Dict
 import socket
 import json
@@ -42,8 +42,8 @@ def send_command_to_watchtower(command):
         client.connect(socket_path)
         client.sendall(json.dumps(command).encode())
 
-def set_relay_off_after_timer(gpio_pin: int, timer: int):
-    time.sleep(timer)
+async def set_relay_off_after_timer(gpio_pin: int, timer: int):
+    await asyncio.sleep(timer)
     pi.write(gpio_pin, 1)  # Turn off the relay after timer
 
 @router.post("/", response_model=Relay)
