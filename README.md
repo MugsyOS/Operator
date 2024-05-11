@@ -80,3 +80,14 @@ export PYTHONPATH=$PYTHONPATH:/path/to/Operator/src
 
 ## Contributing
 Contributions to this project are welcome. Please ensure that all pull requests are well-documented and include tests where applicable.
+
+## Third-Party Libraries
+
+### Modified Library File
+
+The file `src/operator_app/api/v1/weight_platform/lib/hx711.py` in this project was based on [HX711](https://github.com/gandalf15/HX711) which is licensed under the BSD 3-Clause License, Copyright (c) 2017, Marcel Zak. Modifications were made to make it compatible with pigpio.
+
+Original Library License: [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause)
+
+Please refer to the original source for the unmodified version and further details about the library.
+
