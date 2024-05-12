@@ -25,6 +25,7 @@ setup(
         'pydantic==2.7.1',
         'pydantic_core==2.18.2',
         'pytest==8.1.2',
+        'pytest-asyncio==0.23.6',
         'sniffio==1.3.1',
         'starlette==0.37.2',
         'typing_extensions==4.11.0',

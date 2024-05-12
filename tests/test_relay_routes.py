@@ -1,5 +1,6 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
+
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import time
@@ -25,9 +26,9 @@ def test_set_relay_returns_400_for_invalid_channel():
     assert response.status_code == 400
 
 @pytest.mark.asyncio
-@patch('operator_app.api.v1.relay.relay_routes.asyncio.sleep', new_callable=MagicMock)
+@patch('operator_app.api.v1.relay.relay_routes.asyncio.sleep', new_callable=AsyncMock)
 async def test_set_relay_off_after_timer(mock_sleep):
     with patch('operator_app.api.v1.relay.relay_routes.pi.write') as mock_write:
         await set_relay_off_after_timer(22, 5)
-        mock_sleep.assert_called_with(5)
+        mock_sleep.assert_awaited_with(5)
         mock_write.assert_called_with(22, 1)
