@@ -12,7 +12,7 @@ router = APIRouter()
 # Unix Socket Path
 socket_path = "/tmp/pour_weight_service.sock"
 
-def send_request_to_sensor_service(request_data):
+def handle_pour_weight_service(request_data):
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
         client.connect(socket_path)
         client.sendall(json.dumps(request_data).encode())
@@ -22,7 +22,7 @@ def send_request_to_sensor_service(request_data):
 @router.post("/calibrate")
 def calibrate(item: CalibrationItem):
     try:
-        response = send_request_to_sensor_service({
+        response = handle_pour_weight_service({
             "action": "calibrate",
             "known_weight_grams": item.known_weight_grams
         })
@@ -35,7 +35,7 @@ def calibrate(item: CalibrationItem):
 @router.get("/read-weight")
 def get_weight():
     try:
-        response = send_request_to_sensor_service({
+        response = handle_pour_weight_service({
             "action": "read_weight"
         })
         if "error" in response:
