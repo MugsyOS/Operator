@@ -2,6 +2,11 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Ba
 from pydantic import BaseModel
 import asyncio
 import configparser
+import os
+import sys
+from datetime import timedelta
+
+from HX711 import *
 
 config = configparser.ConfigParser()
 config.read('src/operator_app/hardware_config.ini')
@@ -11,7 +16,7 @@ router = APIRouter()
 class CalibrationStep(BaseModel):
     message: str
 
-@router.websocket("/ws/calibrate")
+@router.websocket("/")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     steps = [
