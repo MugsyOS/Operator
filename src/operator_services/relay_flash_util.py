@@ -1,26 +1,39 @@
 import pigpio
-import time
+import subprocess
 
-def flash_pins(pi, pins, duration, flash_duration=0.5):
-    end_time = time.time() + duration
-    while time.time() < end_time:
-        for pin in pins:
-            pi.write(pin, 0)  # Turn all specified pins on
-        time.sleep(flash_duration)  # Keep them on for half a second
-        for pin in pins:
-            pi.write(pin, 1)  # Turn all specified pins off
-        time.sleep(flash_duration)  # Off for half a second
+# Define the pins used by the HX711
+pins_to_release = [17, 27, 5, 6]  # Add all pins that might be used
 
+# Function to kill any process using pigpio
+def kill_pigpio_processes():
+    try:
+        subprocess.run(['sudo', 'killall', 'pigpiod'], check=True)
+    except subprocess.CalledProcessError:
+        pass
+
+# Function to restart pigpio daemon
+def restart_pigpio_daemon():
+    try:
+        subprocess.run(['sudo', 'pigpiod'], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to start pigpiod daemon: {e}")
+
+# Connect to pigpio daemon
 pi = pigpio.pi()
 if not pi.connected:
-    print("Pigpio daemon is not running.")
-else:
-    try:
-        pins = [22, 23, 24, 25]  # List of pins to control
-        for pin in pins:
-            pi.set_mode(pin, pigpio.OUTPUT)  # Set each pin as an output
-        print("Flashing pins...")
-        flash_pins(pi, pins, 5)  # Flash all pins for 5 seconds
-    finally:
-        pi.stop()
-        print("Done flashing pins and disconnected from pigpio.")
+    print("Failed to connect to pigpio daemon. Restarting daemon...")
+    kill_pigpio_processes()
+    restart_pigpio_daemon()
+    pi = pigpio.pi()
+    if not pi.connected:
+        print("Failed to connect to pigpio daemon after restart.")
+        exit(1)
+
+# Reset each pin
+for pin in pins_to_release:
+    pi.set_mode(pin, pigpio.INPUT)  # Set pin mode to INPUT to release it
+    pi.set_pull_up_down(pin, pigpio.PUD_OFF)  # Disable any pull up/down resistors
+    pi.write(pin, 0)  # Write a low value to reset the state
+
+pi.stop()
+print("Pins released successfully.")
