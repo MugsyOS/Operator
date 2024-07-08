@@ -21,7 +21,7 @@ class CalibrationStep(BaseModel):
     message: str
 
 @router.websocket("/{scale_type}")
-async def websocket_endpoint(websocket: WebSocket, scale_type: str):
+async def calibrate_scale(websocket: WebSocket, scale_type: str):
     await websocket.accept()
     if scale_type not in ["CONE_SCALE", "MUG_SCALE"]:
         await websocket.send_json({"error": "Invalid scale type. Please use CONE_SCALE or MUG_SCALE."})
@@ -103,9 +103,6 @@ async def websocket_endpoint(websocket: WebSocket, scale_type: str):
 
         # Store calibration values in configuration file
         config['SCALES'][f'{scale_type}_UNIT'] = unit
-        config['SCALES'][f'{scale_type}_KNOWN_WEIGHT'] = str(known_weight)
-        config['SCALES'][f'{scale_type}_RAW_VALUE'] = str(raw_value)
-        config['SCALES'][f'{scale_type}_SAMPLES'] = str(samples)
         config['SCALES'][f'{scale_type}_REFERENCE_UNIT'] = str(ref_unit)
         config['SCALES'][f'{scale_type}_ZERO_VALUE'] = str(zero_value)
 
