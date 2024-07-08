@@ -28,7 +28,7 @@ async def websocket_endpoint(websocket: WebSocket, scale_type: str):
         await websocket.close(code=1008)  # Policy violation code
         return
 
-    # Retrieve data and clock pins from configuration
+    # Retrieve data and clock pins from configuration 
     try:
         if scale_type == "CONE_SCALE":
             data_pin = int(config['SCALES']['CONE_SCALE_DATA_PIN'])
@@ -100,6 +100,18 @@ async def websocket_endpoint(websocket: WebSocket, scale_type: str):
             "reference_unit": ref_unit,
             "zero_value": zero_value
         })
+
+        # Store calibration values in configuration file
+        config['SCALES'][f'{scale_type}_UNIT'] = unit
+        config['SCALES'][f'{scale_type}_KNOWN_WEIGHT'] = str(known_weight)
+        config['SCALES'][f'{scale_type}_RAW_VALUE'] = str(raw_value)
+        config['SCALES'][f'{scale_type}_SAMPLES'] = str(samples)
+        config['SCALES'][f'{scale_type}_REFERENCE_UNIT'] = str(ref_unit)
+        config['SCALES'][f'{scale_type}_ZERO_VALUE'] = str(zero_value)
+
+        with open(config_path, 'w') as configfile:
+            config.write(configfile)
+
     except WebSocketDisconnect:
         print("Client disconnected")
     finally:
