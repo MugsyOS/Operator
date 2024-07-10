@@ -109,7 +109,8 @@ ENV/
 env.bak/
 venv.bak/
 operator/
-.env*
+.env.dev
+.env.test
 # allow template
 !.env.template
 
