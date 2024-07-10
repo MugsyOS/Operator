@@ -4,12 +4,11 @@ import asyncio
 import configparser
 import pigpio
 import json
-from HX711 import SimpleHX711, GpioException, TimeoutException, Options
 import os
 
 # Read configuration
 config = configparser.ConfigParser()
-config_path = 'src/operator_app/hardware_config.ini'
+config_path = os.getenv('CONFIG_PATH', 'src/operator_app/hardware_config.ini')
 if not os.path.exists(config_path):
     raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
@@ -45,6 +44,14 @@ async def calibrate_scale(websocket: WebSocket, scale_type: str):
     pi = pigpio.pi()
     if not pi.connected:
         await websocket.send_json({"error": "Failed to connect to pigpio daemon."})
+        await websocket.close(code=1011)
+        return
+
+    # Import HX711 only when necessary
+    try:
+        from HX711 import SimpleHX711, GpioException, TimeoutException, Options
+    except ImportError as e:
+        await websocket.send_json({"error": f"Failed to import HX711 module: {str(e)}"})
         await websocket.close(code=1011)
         return
 

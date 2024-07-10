@@ -3,11 +3,11 @@ from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import pigpio  # Import pigpio for usage in your test
-
-from operator_app.api.v1.status.status_routes import router  # replace with the actual location of your status routes
+from operator_app.api.v1.status.status_routes import router as status_router
 
 app = FastAPI()
-app.include_router(router)
+app.include_router(status_router)
+
 client = TestClient(app)
 
 @patch('operator_app.api.v1.status.status_services.pi')
