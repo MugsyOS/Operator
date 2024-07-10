@@ -6,8 +6,8 @@ from operator_app.api.v1.pins.pin_routes import router as pin_router
 from operator_app.api.v1.calibrate_scales.calibrate_scales_routes import router as calibrate_scales_router
 
 v1_router = APIRouter()
-router.include_router(relay_router, prefix="/relay")
-router.include_router(status_router, prefix="/status")
-router.include_router(pump_router, prefix="/pump")
-router.include_router(pin_router, prefix="/pin")
-router.include_router(calibrate_scales_router, prefix="/calibrate-scales")
+v1_router.include_router(relay_router, prefix="/relay")
+v1_router.include_router(status_router, prefix="/status")
+v1_router.include_router(pump_router, prefix="/pump")
+v1_router.include_router(pin_router, prefix="/pin")
+v1_router.include_router(calibrate_scales_router, prefix="/calibrate-scales")
