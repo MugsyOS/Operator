@@ -2,7 +2,7 @@ import pigpio
 import subprocess
 
 # Define the pins used by the HX711
-pins_to_release = [17, 27, 5, 6]  # Add all pins that might be used
+pins_to_release = [5, 6, 17, 27]  # Add all pins that might be used
 
 # Function to kill any process using pigpio
 def kill_pigpio_processes():

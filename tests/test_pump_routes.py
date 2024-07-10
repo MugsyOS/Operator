@@ -2,12 +2,12 @@ import pytest
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
-import pigpio  # Import pigpio for usage in your test
-
-from operator_app.api.v1.pump.pump_routes import router
+import pigpio
+from operator_app.api.v1.pump.pump_routes import router as pump_router
 
 app = FastAPI()
-app.include_router(router)
+app.include_router(pump_router)
+
 client = TestClient(app)
 
 @patch('operator_app.api.v1.pump.pump_routes.pi')

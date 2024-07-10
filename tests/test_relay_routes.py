@@ -1,15 +1,14 @@
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
-
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import time
-import pigpio  # Import pigpio for usage in your test
-
-from operator_app.api.v1.relay.relay_routes import router, set_relay_off_after_timer
+import pigpio
+from operator_app.api.v1.relay.relay_routes import router as relay_router, set_relay_off_after_timer
 
 app = FastAPI()
-app.include_router(router)
+app.include_router(relay_router)
+
 client = TestClient(app)
 
 @patch('operator_app.api.v1.relay.relay_routes.pi')

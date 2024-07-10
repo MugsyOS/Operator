@@ -1,7 +1,7 @@
 import socket
 import os
 import json
-from operator_services.lib.hx711 import HX711  # Adjust the import as per your structure
+from libs.hx711 import HX711  # Adjust the import as per your structure
 import pigpio
 import configparser
 from statistics import mean
@@ -28,16 +28,18 @@ def handle_calibration(hx, data):
     if err:
         return {"error": str(err)}
 
-    # Placeholder for delay for user action
+    # Consider a delay for user action
     import time
     time.sleep(10)
 
-    reading = hx.get_weight()
-    if not reading:
-        return {"error": "Cannot calculate mean value. Variable reading: " + str(reading)}
+    readings = [hx.get_weight() for _ in range(10)]  # Take 10 readings
+    readings = [x for x in readings if x is not False]  # Filter out invalid readings
+    if not readings:
+        return {"error": "Cannot calculate mean value."}
 
-    ratio = reading / known_weight_grams
-    hx.set_scale_ratio(ratio)
+    average_reading = mean(readings)
+    ratio = average_reading / known_weight_grams
+    hx.set_scale_ratio(ratio)  # Update using the new function definition
 
     config = configparser.ConfigParser()
     config.read(config_path)
@@ -47,6 +49,14 @@ def handle_calibration(hx, data):
         config.write(configfile)
 
     return {"status": "Calibration successful", "ratio": ratio}
+
+# Revised set_scale_ratio function
+def set_scale_ratio(self, readings, known_weight):
+    if readings:
+        average = mean(readings)
+        self.ratio = average / known_weight
+    else:
+        self.ratio = 1  # Default to avoid division by zero
 
 def handle_read_weight(hx):
     readings = 5
@@ -66,10 +76,11 @@ def handle_read_weight(hx):
 
 def main():
     pi = pigpio.pi()
-    hx = HX711(pi, dout_pin=5, pd_sck_pin=6)
+    hx = HX711(pi, dout_pin=17, pd_sck_pin=27)
 
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(socket_path)
+    os.chmod(socket_path, 0o666)
     server.listen()
 
     while True:
