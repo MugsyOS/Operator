@@ -109,6 +109,8 @@ ENV/
 env.bak/
 venv.bak/
 operator/
+# allow template
+!.env.template
 
 # Spyder project settings
 .spyderproject
