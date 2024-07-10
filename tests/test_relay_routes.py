@@ -1,29 +1,27 @@
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
-
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import time
-import pigpio  # Import pigpio for usage in your test
-from operator_app.api.v1 import v1_router
-from operator_app.api.v1.relay.relay_routes import set_relay_off_after_timer
+import pigpio
+from operator_app.api.v1.relay.relay_routes import router as relay_router, set_relay_off_after_timer
 
 app = FastAPI()
-app.include_router(v1_router, prefix="/v1")
+app.include_router(relay_router)
 
 client = TestClient(app)
 
 @patch('operator_app.api.v1.relay.relay_routes.pi')
 @patch('operator_app.api.v1.relay.relay_routes.send_command_to_watchtower')
 def test_set_relay_turns_on_given_relay_channel(mocked_send_command_to_watchtower, mocked_pi):
-    response = client.post("/v1/relay", json={"relay_channel": 1, "state": "on"})
+    response = client.post("/", json={"relay_channel": 1, "state": "on"})
     assert response.status_code == 200
     mocked_pi.set_mode.assert_called_once_with(22, pigpio.OUTPUT)
     mocked_pi.write.assert_called_once_with(22, 0)
     mocked_send_command_to_watchtower.assert_called_once()
 
 def test_set_relay_returns_400_for_invalid_channel():
-    response = client.post("/v1/relay", json={"relay_channel": 5, "state": "on"})
+    response = client.post("/", json={"relay_channel": 5, "state": "on"})
     assert response.status_code == 400
 
 @pytest.mark.asyncio

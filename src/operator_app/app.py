@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from operator_app.api.v1 import v1_router
-
+from operator_app.api.v1.routes import v1_router
 
 app = FastAPI()
 
