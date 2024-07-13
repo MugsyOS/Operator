@@ -101,7 +101,7 @@ Install Python Wrapper:
 - - -
 
 ### Calibrate Scales (headless):
-The easiest method to calibrate the scales with the UI is to start Operator and connect to the calibration endpoint in Postman: ws://mugsy-0.local:8000/v1/calibrate-scales/CONE_SCALE
+The easiest method to calibrate the scales without the UI is to start Operator and connect to the calibration endpoint in Postman: ws://mugsy-0.local:8000/v1/calibrate-scales/CONE_SCALE
 
 > If you want to calibrate the mug platform, just swap out CONE_SCALE for MUG_SCALE in the endpoint’s URL.
 
