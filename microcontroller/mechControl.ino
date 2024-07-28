@@ -94,8 +94,7 @@ void setup() {
   // Safety check to ensure the limit switch is connected
   if (digitalRead(limitSwitchPin) == HIGH) {
     Serial.println("Error: Limit switch not connected");
-    while (true)
-      ;  // Stop execution
+    while (true);  // Stop execution
   }
 
   // Zero the spout stepper motor
