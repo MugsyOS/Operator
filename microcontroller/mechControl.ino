@@ -53,19 +53,15 @@ String commandBuffer = "";
 CircularBuffer<String, 20> commandQueue;
 
 void setup() {
-  // Set up the enable pins as outputs
-  pinMode(coneEnablePin, OUTPUT);
-  pinMode(spoutEnablePin, OUTPUT);
-
-  // Disable both motors initially
-  digitalWrite(coneEnablePin, HIGH);
-  digitalWrite(spoutEnablePin, HIGH);
-
   // Set up the limit switch pin as input
   pinMode(limitSwitchPin, INPUT_PULLUP);
+  
+  // Set up the enable pins
+  coneStepper.setEnablePin(coneEnablePin);
+  spoutStepper.setEnablePin(spoutEnablePin);
 
   // Set up the microstepping pins as outputs and configure for 1/32 microstepping
-  pinMode(M0, OUTPUT);
+  pinMode(M0, OUTPUT);  
   pinMode(M1, OUTPUT);
   pinMode(M2, OUTPUT);
   digitalWrite(M0, HIGH);  // Set M0 to HIGH for 1/32 microstepping
@@ -81,6 +77,10 @@ void setup() {
   spoutStepper.setMaxSpeed(2000);                    // Adjust speed as needed
   spoutStepper.setAcceleration(10000);               // Adjust acceleration as needed
   spoutStepper.setPinsInverted(false, false, true);  // Invert enable pin
+
+  // Disable both motors initially
+  coneStepper.disableOutputs();
+  spoutStepper.disableOutputs();
 
   // Initialize serial communication
   Serial.begin(9600);
@@ -141,14 +141,14 @@ void runSteppers() {
   bool spoutMoving = spoutStepper.distanceToGo() != 0;
 
   if (coneMoving || spoutMoving) {
-    digitalWrite(coneEnablePin, LOW);
-    digitalWrite(spoutEnablePin, LOW);
+    coneStepper.enableOutputs();
+    spoutStepper.enableOutputs();
 
     if (coneMoving) coneStepper.run();
     if (spoutMoving) spoutStepper.run();
   } else {
-    digitalWrite(coneEnablePin, HIGH);
-    digitalWrite(spoutEnablePin, HIGH);
+    coneStepper.disableOutputs();
+    spoutStepper.disableOutputs();
   }
 }
 
@@ -199,7 +199,7 @@ void handleCommand(String input) {
 
 void zeroSpoutStepper() {
   // Enable the motor
-  digitalWrite(spoutEnablePin, LOW);
+  spoutStepper.enableOutputs();
 
   // Rotate counterclockwise until the limit switch is hit
   spoutStepper.setSpeed(-4000);  // Negative speed for counterclockwise
