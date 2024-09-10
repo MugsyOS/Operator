@@ -1,5 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
-from operator_app.auth.auth import auth_handler
+from operator_app.auth import auth_handler
 from typing import Optional
 from pydantic import BaseModel
 from .pin_services import turn_on, turn_off
