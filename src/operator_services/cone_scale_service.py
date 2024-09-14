@@ -15,13 +15,13 @@ config_path = os.path.join('src', 'operator_app', 'hardware_config.ini')
 config.read(config_path)
 
 # Configuration
-DATA_PIN = config.getint('SCALES', 'mug_scale_data_pin')
-CLOCK_PIN = config.getint('SCALES', 'mug_scale_clock_pin')
-REF_UNIT = int(config.getfloat('SCALES', 'mug_scale_reference_unit'))
-OFFSET = int(config.getfloat('SCALES', 'mug_scale_zero_value'))
-UNIT = config.get('SCALES', 'mug_scale_unit')
+DATA_PIN = config.getint('SCALES', 'cone_scale_data_pin')
+CLOCK_PIN = config.getint('SCALES', 'cone_scale_clock_pin')
+REF_UNIT = int(config.getfloat('SCALES', 'cone_scale_reference_unit'))
+OFFSET = int(config.getfloat('SCALES', 'cone_scale_zero_value'))
+UNIT = config.get('SCALES', 'cone_scale_unit')
 SAMPLE_SIZE = 15
-SOCKET_PATH = "/tmp/mug_scale_service.sock"
+SOCKET_PATH = "/tmp/cone_scale_service.sock"
 
 pi = pigpio.pi()
 hx = None
