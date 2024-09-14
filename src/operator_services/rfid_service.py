@@ -5,6 +5,10 @@ from pn532pi import Pn532, Pn532I2c
 from pn532pi.nfc.pn532 import PN532_MIFARE_ISO14443A_106KBPS
 import requests
 import configparser
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Read the configuration file
 config = configparser.ConfigParser()
@@ -19,10 +23,10 @@ def setup_nfc():
     nfc.begin()
     versiondata = nfc.getFirmwareVersion()
     if not versiondata:
-        print("Didn't find PN53x board")
+        logging.error("Didn't find PN53x board")
         raise RuntimeError("Didn't find PN53x board")
     nfc.SAMConfig()
-    print(f"Found chip PN5 {versiondata >> 24 & 0xFF}, Firmware ver. {versiondata >> 16 & 0xFF}.{versiondata >> 8 & 0xFF}")
+    logging.info(f"Found chip PN5 {versiondata >> 24 & 0xFF}, Firmware ver. {versiondata >> 16 & 0xFF}.{versiondata >> 8 & 0xFF}")
     return nfc
 
 def loop(nfc):
@@ -33,15 +37,15 @@ def loop(nfc):
         time.sleep(0.1)
         success, uid = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A_106KBPS)
         if success:
-            print("Found an ISO14443A card")
-            print("UID Length:", len(uid))
+            logging.info("Found an ISO14443A card")
+            logging.info(f"UID Length: {len(uid)}")
             uid_value = binascii.hexlify(uid).decode('utf-8')
-            print("UID Value:", uid_value)
+            logging.info(f"UID Value: {uid_value}")
             time.sleep(0.5)
 
             # Check if the current UID is the same as the last read UID and if less than 10 minutes have passed since it was read
             if last_uid == uid_value and (datetime.datetime.now() - last_read_time).total_seconds() < 600:
-                print("UID already read or less than 10 minutes have passed since it was read.")
+                logging.info("UID already read or less than 10 minutes have passed since it was read.")
                 continue
 
             # Make a POST request with a JSON payload containing the UID
@@ -50,10 +54,10 @@ def loop(nfc):
             response = requests.post(decf_url, headers=headers, json=data)
 
             if response.status_code == 200:
-                print("Successfully sent UID to API.") 
-                print(response.json())
+                logging.info("Successfully sent UID to API.")
+                logging.info(f"API Response: {response.json()}")
             else:
-                print(f"Failed to send UID to API. Status code: {response.status_code}")
+                logging.error(f"Failed to send UID to API. Status code: {response.status_code}")
 
             # Update the last read UID and the time it was read
             last_uid = uid_value
@@ -62,8 +66,9 @@ def loop(nfc):
         time.sleep(1)
 
 if __name__ == "__main__":
+    logging.info("Starting RFID service")
     try:
         nfc_module = setup_nfc()
         loop(nfc_module)
     except Exception as e:
-        print("An error occurred:", str(e))
+        logging.exception(f"An error occurred: {str(e)}")

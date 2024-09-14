@@ -68,10 +68,10 @@ pi = None
 
 try:
     # Define the pins used by the HX711
-    data_pin = 17
-    clock_pin = 27
-    ref_unit = 2075
-    offset = 122631
+    data_pin = 5
+    clock_pin = 6
+    ref_unit = 473
+    offset = 97870
 
     # Connect to pigpio daemon
     pi = pigpio.pi()
