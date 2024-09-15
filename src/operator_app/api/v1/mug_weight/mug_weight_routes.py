@@ -1,6 +1,7 @@
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from .mug_weight_service import start_weight_stream, get_current_weight, zero_scale
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
+from .mug_weight_service import start_weight_stream, get_current_weight, zero_scale, pump_to_weight
 
 router = APIRouter()
 
@@ -24,3 +25,15 @@ async def get_weight():
 @router.post("/zero")
 async def zero_weight_scale():
     return await zero_scale()
+
+class PumpToWeightRequest(BaseModel):
+    target_weight: float
+    pump_speed: int
+    tolerance: float = 0.5
+
+@router.post("/pump-to-weight")
+async def pump_to_weight_endpoint(request: PumpToWeightRequest):
+    result = await pump_to_weight(request.target_weight, request.pump_speed, request.tolerance)
+    if result["status"] == "error":
+        raise HTTPException(status_code=500, detail=result["message"])
+    return result

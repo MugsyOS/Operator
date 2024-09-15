@@ -6,6 +6,7 @@ from starlette.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from operator_app.api.v1.routes import v1_router
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -13,6 +14,14 @@ logger = logging.getLogger(__name__)
 
 debug = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
 app = FastAPI(debug=debug)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Add your Vite dev server URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(v1_router, prefix="/v1")
 

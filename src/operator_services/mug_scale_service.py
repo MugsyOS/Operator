@@ -123,7 +123,7 @@ async def handle_client(reader, writer):
                 await writer.drain()
 
     except (ConnectionResetError, BrokenPipeError) as e:
-        logging.warning(f"Client disconnected: {e}")
+        logging.info(f"Client disconnected: {e}")
     except Exception as e:
         logging.error(f"Error handling client: {e}", exc_info=True)
     finally:
@@ -131,7 +131,7 @@ async def handle_client(reader, writer):
         try:
             await writer.wait_closed()
         except Exception as e:
-            logging.warning(f"Error while closing writer: {e}")
+            logging.warning("Closing writer")
         logging.debug("Client connection closed")
 
 async def main():
