@@ -51,5 +51,14 @@ module.exports = {
       kill_timeout: 3000,
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
+    {
+      name: '💧 Pump Control',
+      script: './scripts/start_pump_service.sh',
+      cwd: '/home/maos/Mugsy/dev/Operator',
+      wait_ready: true,
+      listen_timeout: 10000,
+      kill_timeout: 3000,
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
   ]
 };
