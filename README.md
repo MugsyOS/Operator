@@ -1,10 +1,7 @@
 # Mugsy: Operator Middleware
 [![codecov](https://codecov.io/gh/margyle/operator/graph/badge.svg?token=Q1BR1UE0FG)](https://codecov.io/gh/margyle/operator)
 
-Please note that this app is not ready for prime time just yet.  Please checkout the following blog posts for more info:
-- Operator Overview: https://www.heymugsy.com/blog/2024/4/28/update-operator-middleware
-- Current Status: [https://github.com/MugsyOS/Operator/issues/12](https://github.com/MugsyOS/Operator/issues/12)
-
+**Please note that this app is not ready for prime time just yet and this Read Me may be out of date!**
 ## Introduction
 This repository contains the source code for the Operator App, a FastAPI application designed to manage and control Mugsys hardware devices. All GPIO control is handled by Operator to keep hardware related functionality isolated from the primary DECAF api, allowing for increased hardware compatibility. 
 
