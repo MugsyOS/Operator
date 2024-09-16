@@ -1,5 +1,6 @@
 # pragma: no cover
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from operator_app.auth import auth_handler
 from pydantic import BaseModel, Field
 from enum import Enum
 import pigpio
@@ -29,7 +30,7 @@ pi = pigpio.pi()
 
 
 @router.post("/")
-async def control_pump(pump: PumpControl):
+async def control_pump(pump: PumpControl, payload=Depends(auth_handler.decode_token)):
   # Initialize the GPIO pins
   pi.set_mode(FORWARD_PIN, pigpio.OUTPUT)
   pi.set_mode(REVERSE_PIN, pigpio.OUTPUT)
@@ -52,7 +53,7 @@ async def control_pump(pump: PumpControl):
   return {"status": f"Pump set to {pump.direction}"}
 
 @router.post("/flow-rate")
-async def control_pump_speed(pump: PumpSpeedControl):
+async def control_pump_speed(pump: PumpSpeedControl, payload=Depends(auth_handler.decode_token)):
   # Initialize the GPIO pins
   pi.set_mode(FORWARD_PIN, pigpio.OUTPUT)
   pi.set_mode(REVERSE_PIN, pigpio.OUTPUT)
