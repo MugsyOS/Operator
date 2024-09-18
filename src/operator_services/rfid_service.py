@@ -12,10 +12,10 @@ import logging
 
 # Constants
 CONFIG_FILE = 'src/operator_app/hardware_config.ini'
-UID_COOLDOWN = 600  # seconds
 SCAN_INTERVAL = 0.1  # seconds
 CARD_READ_DELAY = 0.5  # seconds
 MAIN_LOOP_DELAY = 1  # seconds
+CONSECUTIVE_EMPTY_READS_THRESHOLD = 5
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -55,27 +55,41 @@ def send_uid_to_api(url: str, uid: str) -> bool:
         return False
 
 def loop(nfc: Pn532, api_url: str):
-    last_uid = None
-    last_read_time = None
+    current_mug_id = None
+    consecutive_empty_reads = 0
+    last_read_time = 0
 
     while True:
-        time.sleep(SCAN_INTERVAL)
+        current_time = time.time()
+        
+        if current_time - last_read_time < SCAN_INTERVAL:
+            time.sleep(SCAN_INTERVAL - (current_time - last_read_time))
+            continue
+
+        last_read_time = current_time
         success, uid = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A_106KBPS)
+
         if success:
-            logger.info("Found an ISO14443A card")
+            logger.info("Read an ISO14443A tag.")
             logger.info(f"UID Length: {len(uid)}")
             uid_value = binascii.hexlify(uid).decode('utf-8')
             logger.info(f"UID Value: {uid_value}")
             time.sleep(CARD_READ_DELAY)
 
-            current_time = datetime.datetime.now()
-            if last_uid == uid_value and (current_time - last_read_time).total_seconds() < UID_COOLDOWN:
-                logger.info("UID already read or cooldown period not elapsed.")
-                continue
-
-            if send_uid_to_api(api_url, uid_value):
-                last_uid = uid_value
-                last_read_time = current_time
+            consecutive_empty_reads = 0
+            if uid_value != current_mug_id:
+                current_mug_id = uid_value
+                if send_uid_to_api(api_url, uid_value):
+                    logger.info(f"New mug detected and processed: {uid_value}")
+                else:
+                    logger.error(f"Failed to process new mug: {uid_value}")
+        else:
+            consecutive_empty_reads += 1
+            if consecutive_empty_reads >= CONSECUTIVE_EMPTY_READS_THRESHOLD:
+                if current_mug_id is not None:
+                    logger.info(f"Mug {current_mug_id} removed")
+                current_mug_id = None
+                consecutive_empty_reads = 0
 
         time.sleep(MAIN_LOOP_DELAY)
 
