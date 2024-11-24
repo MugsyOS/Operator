@@ -17,11 +17,17 @@ config = configparser.ConfigParser()
 config.read('hardware_config.ini')
 SERIAL_PORT = config.getint('MICROCONTROLLER', 'SERIAL_PORT', fallback='/dev/ttyUSB1')
 BAUD_RATE = config.getint('MICROCONTROLLER', 'BAUD_RATE', fallback=9600)
+WEIGHT_SOCKET_PATH = "/tmp/mug_scale_service.sock"
 
 class MechControlService:
     def __init__(self, socket_path: str = "/tmp/mech-control.sock"):
         # Initialize Arduino
         self.arduino = PyCmdMessenger.ArduinoBoard(SERIAL_PORT, BAUD_RATE)
+        self.weight_service = WeightService() # For reading weight from mug scale
+        
+        # Control state
+        self.stop_mech = False
+        self.stop_reason = None
         
         # Command definitions
         self.commands = [
@@ -43,6 +49,10 @@ class MechControlService:
         loop = asyncio.get_running_loop()
         try:
             while True:
+                if self.stop_mech:
+                    logger.info(f"Movement stopped: {self.stop_reason}")
+                    return ['completed', self.stop_reason]
+                
                 response = await loop.run_in_executor(None, self.messenger.receive)
                 if response is not None:
                     logger.debug(f"Received response: {response}")
@@ -64,22 +74,64 @@ class MechControlService:
             required_fields = ['cone_steps', 'cone_speed', 'spout_degrees', 'spout_speed', 'direction']
         elif cmd_type == 'zero_spout':
             required_fields = []
+        elif cmd_type == 'stop_mechanism':
+            required_fields = ['state', 'reason']
         else:
             raise ValueError(f"Unknown command type: {cmd_type}")
 
-        for field in required_fields:
-            if field not in command or not isinstance(command[field], int):
-                raise ValueError(f"Invalid or missing '{field}' in command.")
+        if cmd_type == 'stop_mechanism':
+            if not isinstance(command.get('state'), bool):
+                raise ValueError("'state' must be a boolean")
+            if not isinstance(command.get('reason'), str):
+                raise ValueError("'reason' must be a string")
+        else:
+            for field in required_fields:
+                if field not in command or not isinstance(command[field], int):
+                    raise ValueError(f"Invalid or missing '{field}' in command.")
 
-    async def execute_command(self, command: Dict[str, Any]) -> List[Any]:
+    async def execute_command(self, command: Dict[str, Any]) -> Dict[str, Any]:
         cmd_type = command.get('command')
+        
+        # Handle stop mechanism command
+        if cmd_type == 'stop_mechanism':
+            self.stop_mech = command['state']
+            self.stop_reason = command['reason']
+            logger.info(f"Stop mechanism set to: {self.stop_mech}, reason: {self.stop_reason}")
+            return {
+                'command': cmd_type,
+                'status': 'success',
+                'data': {'stop_mech': self.stop_mech, 'reason': self.stop_reason}
+            }
+
+        # For mechanical commands, check stop_mech state
+        if self.stop_mech:
+            return {
+                'command': cmd_type,
+                'status': 'completed',
+                'data': self.stop_reason
+            }
+        
+        weight = await self.weight_service.get_weight()
+        if weight is not None:
+            logging.info(f"current weight {weight}g")
+        
+        if weight is not None and weight > 300.00:
+            self.stop_mech = True
+            self.stop_reason = "Pour weight reached for step"
+            logger.info(f"Stopping mechanism: {self.stop_reason}")
+            return {
+                'command': cmd_type,
+                'status': 'completed',
+                'data': self.stop_reason
+            }
+
         loop = asyncio.get_running_loop()
         self.validate_command_parameters(command)
 
         try:
             if cmd_type == 'zero_spout':
                 await loop.run_in_executor(None, self.messenger.send, 'zero_spout')
-                logger.info(f"Sent command: zero_spout")
+                logger.info(f"Executing command: zero_spout")
                 response = await asyncio.wait_for(self.wait_for_response('zero_done'), timeout=30)
 
             elif cmd_type == 'move_cone':
@@ -87,7 +139,7 @@ class MechControlService:
                 speed = command['speed']
                 direction = command['direction']
                 await loop.run_in_executor(None, self.messenger.send, 'move_cone', steps, speed, direction)
-                logger.info(f"Sent command: move_cone with steps={steps}, speed={speed}, direction={direction}")
+                logger.info(f"Executing command: move_cone with steps={steps}, speed={speed}, direction={direction}")
                 response = await asyncio.wait_for(self.wait_for_response('cone_done'), timeout=30)
 
             elif cmd_type == 'move_spout':
@@ -95,7 +147,7 @@ class MechControlService:
                 speed = command['speed']
                 direction = command['direction']
                 await loop.run_in_executor(None, self.messenger.send, 'move_spout', degrees, speed, direction)
-                logger.info(f"Sent command: move_spout with degrees={degrees}, speed={speed}, direction={direction}")
+                logger.info(f"Executing command: move_spout with degrees={degrees}, speed={speed}, direction={direction}")
                 response = await asyncio.wait_for(self.wait_for_response('spout_done'), timeout=30)
 
             elif cmd_type == 'move_both':
@@ -114,18 +166,23 @@ class MechControlService:
                     spout_speed,
                     direction
                 )
-                logger.info(f"Sent command: move_both with cone_steps={cone_steps}, cone_speed={cone_speed}, "
+                logger.info(f"Executing command: move_both with cone_steps={cone_steps}, cone_speed={cone_speed}, "
                             f"spout_degrees={spout_degrees}, spout_speed={spout_speed}, direction={direction}")
                 response = await asyncio.wait_for(self.wait_for_response('both_done'), timeout=30)
 
-            else:
-                raise ValueError(f"Unknown command type: {cmd_type}")
-
-            return response
+            return {
+                'command': cmd_type,
+                'status': response[0] if response else 'no_response',
+                'data': response[1] if response and len(response) > 1 else None
+            }
 
         except Exception as e:
             logger.error(f"Error executing command {cmd_type}: {str(e)}", exc_info=True)
-            return ['error', str(e)]
+            return {
+                'command': cmd_type,
+                'status': 'error',
+                'data': str(e)
+            }
 
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         while True:
@@ -138,29 +195,47 @@ class MechControlService:
                 responses = []
 
                 if isinstance(received_data, list):
-                    # Handle array of commands
-                    for command in received_data:
-                        response = await self.execute_command(command)
+                    # Clear stop_mech when starting new batch
+                    self.stop_mech = False
+                    self.stop_reason = "Starting new brew batch"
+                    logger.info("Cleared stop_mech for new batch")
+                    
+                    # If already stopped, return single response for whole batch
+                    if self.stop_mech:
                         responses.append({
-                            'command': command['command'],
-                            'status': response[0] if response else 'no_response',
-                            'data': response[1] if response and len(response) > 1 else None
+                            'command': 'batch',
+                            'status': 'completed',
+                            'data': self.stop_reason
                         })
+                    else:
+                        # Process commands until stopped or completed
+                        for command in received_data:
+                            logger.info(f"Processing command {command['command']} from batch")
+                            response = await self.execute_command(command)
+                            responses.append(response)
+                            
+                            # If this command triggered a stop or errored, stop processing remaining commands
+                            if response['status'] in ['completed', 'error'] or self.stop_mech:
+                                if self.stop_mech:
+                                    logger.info(f"Stopping batch processing: {self.stop_reason}")
+                                # Add a single response for remaining commands
+                                responses.append({
+                                    'command': 'remaining_batch',
+                                    'status': 'completed',
+                                    'data': self.stop_reason
+                                })
+                                break
                 else:
                     # Handle single command
                     response = await self.execute_command(received_data)
-                    responses.append({
-                        'command': received_data['command'],
-                        'status': response[0] if response else 'no_response',
-                        'data': response[1] if response and len(response) > 1 else None
-                    })
+                    responses.append(response)
 
                 # Send response back to client
                 writer.write((json.dumps(responses) + '\n').encode())
                 await writer.drain()
 
             except Exception as e:
-                logger.error(f"Error handling command: {e}", exc_info=True)
+                logger.error(f"Error handling client request: {e}", exc_info=True)
                 error_response = json.dumps({'error': str(e)})
                 writer.write((error_response + '\n').encode())
                 await writer.drain()
@@ -189,6 +264,35 @@ class MechControlService:
                 os.unlink(self.socket_path)
         except OSError as e:
             logger.error(f"Error cleaning up socket: {e}")
+
+class WeightService:
+    def __init__(self):
+        self.socket_path = WEIGHT_SOCKET_PATH
+
+    async def get_weight(self):
+        try:
+            reader, writer = await asyncio.open_unix_connection(self.socket_path)
+            
+            # Send single read command
+            writer.write(b"single_read\n")
+            await writer.drain()
+            
+            # Read response
+            response = await reader.readline()
+            weight_data = json.loads(response.decode())
+            
+            writer.close()
+            await writer.wait_closed()
+            
+            if "error" in weight_data:
+                logging.error(f"Error reading weight: {weight_data['error']}")
+                return None
+                
+            return weight_data['weight']
+            
+        except Exception as e:
+            logging.error(f"Failed to get weight: {e}")
+            return None
 
 if __name__ == "__main__":
     service = MechControlService()

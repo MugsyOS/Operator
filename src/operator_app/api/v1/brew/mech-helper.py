@@ -123,7 +123,7 @@ class WebSocketRelayServer:
     #         logger.info(f"WebSocket server started on ws://localhost:{self.websocket_port}")
     #         await asyncio.Future()  # Run forever
 
-    # listen on all interfaces, only for development
+    #todo: convert this to an env flag (listen on all interfaces, only for development)
     async def start_server(self) -> None:
         async with websockets.serve(self.handle_websocket, "0.0.0.0", self.websocket_port):
             logger.info(f"WebSocket server started on port {self.websocket_port}")
