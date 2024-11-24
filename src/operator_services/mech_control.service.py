@@ -13,10 +13,15 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+config = configparser.ConfigParser()
+config.read('hardware_config.ini')
+SERIAL_PORT = config.getint('MICROCONTROLLER', 'SERIAL_PORT', fallback='/dev/ttyUSB0')
+BAUD_RATE = config.getint('MICROCONTROLLER', 'BAUD_RATE', fallback=9600)
+
 class MechControlService:
     def __init__(self, socket_path: str = "/tmp/mech-control.sock"):
         # Initialize Arduino
-        self.arduino = PyCmdMessenger.ArduinoBoard("/dev/tty.usbserial-11330", baud_rate=9600)
+        self.arduino = PyCmdMessenger.ArduinoBoard(SERIAL_PORT, BAUD_RATE)
         
         # Command definitions
         self.commands = [
