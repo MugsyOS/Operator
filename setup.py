@@ -36,6 +36,7 @@ setup(
         'requests==2.31.0',
         'spidev==3.6',
         'typing==3.7.4.3',
-        'urllib3==2.2.1'
+        'urllib3==2.2.1',
+        'PyCmdMessenger==0.2.4',
     ],
 )
