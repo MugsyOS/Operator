@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 config = configparser.ConfigParser()
 config.read('hardware_config.ini')
-SERIAL_PORT = config.getint('MICROCONTROLLER', 'SERIAL_PORT', fallback='/dev/ttyUSB0')
+SERIAL_PORT = config.getint('MICROCONTROLLER', 'SERIAL_PORT', fallback='/dev/ttyUSB1')
 BAUD_RATE = config.getint('MICROCONTROLLER', 'BAUD_RATE', fallback=9600)
 
 class MechControlService:

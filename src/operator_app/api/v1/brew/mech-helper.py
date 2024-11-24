@@ -117,9 +117,18 @@ class WebSocketRelayServer:
         except Exception as e:
             logger.error(f"Unexpected error in WebSocket handler: {e}", exc_info=True)
 
+    # only listen to local interface
+    # async def start_server(self) -> None:
+    #     async with websockets.serve(self.handle_websocket, "localhost", self.websocket_port):
+    #         logger.info(f"WebSocket server started on ws://localhost:{self.websocket_port}")
+    #         await asyncio.Future()  # Run forever
+
+    # listen on all interfaces, only for development
     async def start_server(self) -> None:
-        async with websockets.serve(self.handle_websocket, "localhost", self.websocket_port):
-            logger.info(f"WebSocket server started on ws://localhost:{self.websocket_port}")
+        async with websockets.serve(self.handle_websocket, "0.0.0.0", self.websocket_port):
+            logger.info(f"WebSocket server started on port {self.websocket_port}")
+            # or if you want to show the IP:
+            # logger.info(f"WebSocket server started on ws://0.0.0.0:{self.websocket_port}")
             await asyncio.Future()  # Run forever
 
 if __name__ == "__main__":
