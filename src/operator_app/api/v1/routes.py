@@ -6,6 +6,8 @@ from operator_app.api.v1.pins.pin_routes import router as pin_router
 from operator_app.api.v1.calibrate_scales.calibrate_scales_routes import router as calibrate_scales_router
 from operator_app.api.v1.mug_weight.mug_weight_routes import router as mug_weight_router
 from operator_app.api.v1.cone_weight.cone_weight_routes import router as cone_weight_router
+from operator_app.api.v1.brew.brew_routes import router as brew_router
+from operator_app.api.v1.brew.test import router as test_router
 
 v1_router = APIRouter()
 v1_router.include_router(relay_router, prefix="/relay")
@@ -15,3 +17,5 @@ v1_router.include_router(pin_router, prefix="/pin")
 v1_router.include_router(calibrate_scales_router, prefix="/calibrate-scales")
 v1_router.include_router(mug_weight_router, prefix="/mug-weight")
 v1_router.include_router(cone_weight_router, prefix="/cone-weight")
+v1_router.include_router(brew_router, prefix="/brew")
+v1_router.include_router(test_router, prefix="/test")
