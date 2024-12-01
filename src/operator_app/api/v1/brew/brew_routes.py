@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 brew_service = BrewService()
 
-@router.websocket("/brew")
+@router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     logger.info("hithithit")
     await websocket.accept()
