@@ -1,25 +1,22 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from operator_app.auth import auth_handler
+import json
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import logging
-from .brew_services import BrewService
+from .brew_services import BrewOrchestrator
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-brew_service = BrewService()
+orchestrator = BrewOrchestrator()
 
-@router.websocket("/ws")
+@router.websocket("/")
 async def websocket_endpoint(websocket: WebSocket):
-    logger.info("hithithit")
-    await websocket.accept()
-    logger.info("WebSocket connection established")
-    
     try:
-        while True:
-            message = await websocket.receive_text()
-            await brew_service.process_message(websocket, message)
+        # Let the orchestrator handle the websocket
+        await orchestrator.handle_websocket(websocket)
     except WebSocketDisconnect:
-        logger.info("ferterteil")
-        logger.info("WebSocket connection closed")
+        logger.info("WebSocket disconnected")
     except Exception as e:
-        logger.info("fi32423423424l")
-        logger.error(f"Unexpected error in WebSocket handler: {e}", exc_info=True)
+        logger.error(f"WebSocket error: {e}")
+        try:
+            await websocket.close()
+        except:
+            pass

@@ -43,7 +43,8 @@ def setup_nfc(i2c_bus: int) -> Pn532:
 
 def send_uid_to_api(url: str, uid: str) -> bool:
     headers = {"Content-Type": "application/json"}
-    data = {"uid": uid}
+    # data = {"uid": uid}
+    data = {"recipeId": "0358d96f-6186-4c32-b174-347471d89d9d"}
     try:
         response = requests.post(url, headers=headers, json=data, timeout=10)
         response.raise_for_status()
