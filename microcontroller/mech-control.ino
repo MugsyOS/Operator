@@ -179,14 +179,14 @@ void executeCommand(Command cmd) {
 void zeroSpoutStepper() {
     // Enable the motor
     digitalWrite(SPOUT_ENABLE_PIN, LOW);
-    spoutStepper.setSpeed(-3000);
+    spoutStepper.setSpeed(3000);
     
     while (digitalRead(LIMIT_SWITCH_PIN) == LOW) {
         spoutStepper.runSpeed();
     }
 
     // Test movement
-    long stepsToMove = (long)(44 * SPOUT_STEPS_PER_DEGREE);
+    long stepsToMove = (long)(-41 * SPOUT_STEPS_PER_DEGREE);
     spoutStepper.move(stepsToMove);
     while (spoutStepper.distanceToGo() != 0) {
         spoutStepper.run();
