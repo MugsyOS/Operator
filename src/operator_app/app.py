@@ -3,6 +3,7 @@ import sys
 import logging
 from fastapi import FastAPI, status
 from starlette.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from operator_app.api.v1.routes import v1_router
@@ -13,6 +14,15 @@ logger = logging.getLogger(__name__)
 
 debug = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
 app = FastAPI(debug=debug)
+
+# Configure CORS
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # Adjust this to your needs
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 app.include_router(v1_router, prefix="/v1")
 

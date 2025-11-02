@@ -25,8 +25,36 @@ class PumpSpeedControl(BaseModel):
 
 router = APIRouter()
 
+#with auth
+
+# @router.post("/")
+# async def route_control_pump(pump: PumpControl, payload=Depends(auth_handler.decode_token)):
+#     try:
+#         result = control_pump(pump)
+#         return {"status": f"Pump set to {pump.direction}", "result": result}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error controlling pump: {str(e)}")
+
+# @router.post("/flow-rate")
+# async def route_control_pump_speed(pump: PumpSpeedControl, payload=Depends(auth_handler.decode_token)):
+#     try:
+#         result = control_pump_speed(pump)
+#         return {"status": f"Pump set to {pump.direction} at {pump.speed}% speed", "result": result}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error controlling pump speed: {str(e)}")
+
+# @router.get("/status")
+# async def route_get_pump_status(payload=Depends(auth_handler.decode_token)):
+#     try:
+#         status = get_pump_status()
+#         return status.model_dump()
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error getting pump status: {str(e)}")
+
+#without auth
+
 @router.post("/")
-async def route_control_pump(pump: PumpControl, payload=Depends(auth_handler.decode_token)):
+async def route_control_pump(pump: PumpControl):
     try:
         result = control_pump(pump)
         return {"status": f"Pump set to {pump.direction}", "result": result}
@@ -34,7 +62,7 @@ async def route_control_pump(pump: PumpControl, payload=Depends(auth_handler.dec
         raise HTTPException(status_code=500, detail=f"Error controlling pump: {str(e)}")
 
 @router.post("/flow-rate")
-async def route_control_pump_speed(pump: PumpSpeedControl, payload=Depends(auth_handler.decode_token)):
+async def route_control_pump_speed(pump: PumpSpeedControl):
     try:
         result = control_pump_speed(pump)
         return {"status": f"Pump set to {pump.direction} at {pump.speed}% speed", "result": result}
@@ -42,7 +70,7 @@ async def route_control_pump_speed(pump: PumpSpeedControl, payload=Depends(auth_
         raise HTTPException(status_code=500, detail=f"Error controlling pump speed: {str(e)}")
 
 @router.get("/status")
-async def route_get_pump_status(payload=Depends(auth_handler.decode_token)):
+async def route_get_pump_status():
     try:
         status = get_pump_status()
         return status.model_dump()
