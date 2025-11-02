@@ -53,7 +53,7 @@ class PumpClient:
                 'action': 'control_speed',
                 'params': {
                     'direction': PumpDirection.forward,
-                    'speed': 45
+                    'speed': 78
                 }
             }
             self._send_command(command)
